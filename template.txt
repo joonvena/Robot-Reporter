@@ -1,0 +1,15 @@
+### Robot Results
+:tada: Passed {{.Passed}} / {{.Total}}
+:fire: Failed {{.Failed}} / {{.Total}}
+
+{{ if eq (len .FailedTests) 0 }}
+
+{{else -}}
+### Failed Tests
+| Name | Message |
+| --- | --- |
+{{end -}}
+{{range .FailedTests -}}
+| {{.Name}} | {{.Message}} |
+{{else}}
+{{end}}

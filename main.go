@@ -114,9 +114,9 @@ type FailedTest struct {
 }
 
 const (
-	tokenMissingMessage = "Token missing. Please define GH_ACCESS_TOKEN environment variable."
-	ownerMissingMessage = "Owner missing. Please define REPO_OWNER environment variable."
-	shaMissingMessage   = "Commit SHA missing. Please define COMMIT_SHA environment variable."
+	tokenMissingMessage      = "Token missing. Please define GH_ACCESS_TOKEN environment variable."
+	ownerMissingMessage      = "Owner missing. Please define REPO_OWNER environment variable."
+	shaMissingMessage        = "Commit SHA missing. Please define COMMIT_SHA environment variable."
 	repositoryMissingMessage = "Repository missing. Please define REPOSITORY environment variable."
 	reportPathMissingMessage = "Report path missing. Please define REPORT_PATH environment variable."
 )
@@ -212,8 +212,8 @@ func main() {
 	// Use the oauth client to authenticate to Github API
 	client := github.NewClient(tc)
 
-	passed := robot.Statistics.Suite.Stat[1].Pass
-	failed := robot.Statistics.Suite.Stat[1].Fail
+	passed := robot.Statistics.Total.Stat[1].Pass
+	failed := robot.Statistics.Total.Stat[1].Fail
 	total := len(robot.Suite.Suite.Test)
 
 	vars := make(map[string]interface{})

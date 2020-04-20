@@ -6,10 +6,10 @@
 
 {{else -}}
 ### Failed Tests
-| Name | Message |
-| --- | --- |
+| Name | Message | Suite |
+| --- | --- | --- |
 {{end -}}
 {{range .FailedTests -}}
-| {{.Name}} | {{.Message}} |
+| {{.Name}} | {{.Message}} | {{.Suite}} | 
 {{else}}
 {{end}}

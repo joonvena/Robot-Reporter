@@ -111,6 +111,7 @@ type Robot struct {
 type FailedTest struct {
 	Name    string `json:"name"`
 	Message string `json:"message"`
+	Suite   string `json:"suite"`
 }
 
 const (
@@ -189,14 +190,30 @@ func main() {
 
 	xml.Unmarshal(byteValue, &robot)
 
+	//for k := 0; k < len(robot.Suite.Suite.Test); k++ {
+
+	//}
+
+	var suite string
+
 	for i := 0; i < len(robot.Suite.Suite.Test); i++ {
 		if robot.Suite.Suite.Test[i].Status.Status == "FAIL" {
+			for k := 0; k < len(robot.Statistics.Suite.Stat); k++ {
+				splittedID := strings.SplitN(robot.Suite.Suite.Test[i].ID, "-", 3)
+				suiteID := splittedID[0] + "-" + splittedID[1]
+				testSuiteID := robot.Statistics.Suite.Stat[k].ID
+				if testSuiteID == suiteID {
+					suite = robot.Statistics.Suite.Stat[k].Name
+				}
+				//fmt.Println(robot.Statistics.Suite.Stat[k].Name)
+			}
 			name := robot.Suite.Suite.Test[i].Name
 			status := strings.ReplaceAll(robot.Suite.Suite.Test[i].Status.Text, "\n", " ")
 			input := []byte(fmt.Sprintf(`[{
 				"name": "%v",
-				"message": "%v"
-			}]`, name, status))
+				"message": "%v",
+				"suite": "%v"
+			}]`, name, status, suite))
 			var tmpFailure []FailedTest
 			err := json.Unmarshal(input, &tmpFailure)
 			if err != nil {
@@ -224,7 +241,7 @@ func main() {
 
 	var tp bytes.Buffer
 
-	templatelocation := filepath.Join("/", "template.txt")
+	templatelocation := filepath.Join("./", "template.txt")
 
 	tpl, err := template.ParseFiles(templatelocation)
 	if err != nil {

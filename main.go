@@ -229,8 +229,8 @@ func main() {
 	// Use the oauth client to authenticate to Github API
 	client := github.NewClient(tc)
 
-	passed := robot.Statistics.Total.Stat[1].Pass
-	failed := robot.Statistics.Total.Stat[1].Fail
+	passed := robot.Statistics.Total.Stat[0].Pass
+	failed := robot.Statistics.Total.Stat[0].Fail
 	total := len(robot.Suite.Suite.Test)
 
 	vars := make(map[string]interface{})

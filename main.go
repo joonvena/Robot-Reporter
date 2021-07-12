@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/google/go-github/github"
@@ -128,6 +129,8 @@ var (
 	sha        = flag.String("sha", os.Getenv("COMMIT_SHA"), "Commit`s SHA")
 	repository = flag.String("repository", os.Getenv("REPOSITORY"), "Repository")
 	reportPath = flag.String("report_path", os.Getenv("REPORT_PATH"), "Location of output.xml")
+	prNumber   = flag.String("pullrequest_number", os.Getenv("PR_NUMBER"), "Pull request number")
+	actionRef  = flag.String("actionRef", os.Getenv("GITHUB_ACTION_REF"), "Pull request number")
 )
 
 func readOutput() (*os.File, error) {
@@ -238,10 +241,11 @@ func main() {
 	vars["Failed"] = &failed
 	vars["Total"] = &total
 	vars["FailedTests"] = &failures
+	vars["ActionRef"] = &actionRef
 
 	var tp bytes.Buffer
 
-	templatelocation := filepath.Join("./", "template.txt")
+	templatelocation := filepath.Join("/", "template.txt")
 
 	tpl, err := template.ParseFiles(templatelocation)
 	if err != nil {
@@ -252,9 +256,14 @@ func main() {
 
 	result := tp.String()
 
-	commitComment := &github.RepositoryComment{Body: &result}
+	commitComment := &github.IssueComment{Body: &result}
 
-	_, _, err = client.Repositories.CreateComment(ctx, *owner, *repository, *sha, commitComment)
+	pullRequestNumber, err := strconv.Atoi(*prNumber)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	_, _, err = client.Issues.CreateComment(ctx, *owner, *repository, pullRequestNumber, commitComment)
 	if err != nil {
 		log.Fatal(err)
 	}

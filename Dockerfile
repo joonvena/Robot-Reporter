@@ -13,7 +13,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o app .
+RUN CGO_ENABLED=0 go build -o app .
 
 WORKDIR /dist
 
@@ -23,6 +23,6 @@ FROM alpine:latest
 
 COPY --from=builder /dist/app /dist/template.txt /
 
-RUN apk update && apk add --no-cache ca-certificates &&  update-ca-certificates
+RUN apk update && apk add --no-cache ca-certificates &&  update-ca-certificates && apk add --no-cache libc6-compat
 
 ENTRYPOINT ["/app"]

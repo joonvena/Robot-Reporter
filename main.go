@@ -241,12 +241,12 @@ func main() {
 
 	var tp bytes.Buffer
 
-	templatelocation := filepath.Join("./", "template.txt")
+	templatelocation := "/template.txt"
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	tpl, err := template.ParseFiles(templatelocation)
-	if err != nil {
-		fmt.Println(err)
-	}
 
 	tpl.Execute(&tp, vars)
 

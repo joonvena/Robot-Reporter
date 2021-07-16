@@ -17,11 +17,11 @@ RUN go build -o app .
 
 WORKDIR /dist
 
-RUN cp /build/app /build/template.txt .
+RUN cp -r /build/app /build/assets/ .
 
 FROM alpine:latest
 
-COPY --from=builder /dist/app /dist/template.txt /
+COPY --from=builder /dist/app /dist/assets/ /
 
 RUN apk update && apk add --no-cache ca-certificates &&  update-ca-certificates
 

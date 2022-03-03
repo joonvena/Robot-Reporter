@@ -15,13 +15,10 @@ COPY . .
 
 RUN go build -o app .
 
-WORKDIR /dist
-
-RUN cp -r /build/app /build/assets/ .
-
 FROM alpine:latest
 
-COPY --from=builder /dist/app /dist/assets/ /
+COPY --from=builder /build/app .
+COPY  assets /assets
 
 RUN apk update && apk add --no-cache ca-certificates &&  update-ca-certificates
 

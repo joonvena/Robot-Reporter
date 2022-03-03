@@ -1,15 +1,23 @@
 ### Robot Results
-:tada: Passed {{.Passed}} / {{.Total}}
-:fire: Failed {{.Failed}} / {{.Total}}
+| :white_check_mark: Passed | :x: Failed | :next_track_button: Skipped | Total | Pass % |
+| --- | --- | --- | :---: | :---: |
+| {{.Passed}} | {{.Failed}} | {{.Skipped}} | {{.Total}} | {{.PassPercentage}}
+
+### Passed Tests
+| Name | :stopwatch: Duration | Suite |
+| --- | :---: | :---: |
+{{range .PassedTests -}}
+| {{.Name}} | {{.ExecutionTime}} s | `{{.Suite}}` |
+{{end}}
 
 {{ if eq (len .FailedTests) 0 }}
 
 {{else -}}
 ### Failed Tests
-| Name | Message | Suite |
-| --- | --- | --- |
+| Name | Message | :stopwatch: Duration | Suite |
+| --- | --- | :---: | :---: |
 {{end -}}
 {{range .FailedTests -}}
-| {{.Name}} | {{.Message}} | {{.Suite}} | 
+| {{.Name}} | {{.Message}} | {{.ExecutionTime}} s | `{{.Suite}}` |
 {{else}}
 {{end}}

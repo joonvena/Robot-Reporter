@@ -3,9 +3,13 @@
 | --- | --- | --- | :---: | :---: |
 | {{.Passed}} | {{.Failed}} | {{.Skipped}} | {{.Total}} | {{.PassPercentage}}
 
+{{ if eq (len .PassedTests) 0 }}
+
+{{else -}}
 ### Passed Tests
 | Name | :stopwatch: Duration | Suite |
 | --- | :---: | :---: |
+{{end -}}
 {{range .PassedTests -}}
 | {{.Name}} | {{.ExecutionTime}} s | `{{.Suite}}` |
 {{end}}

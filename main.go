@@ -13,121 +13,28 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 )
 
-type Robot struct {
-	XMLName   xml.Name `xml:"robot"`
-	Text      string   `xml:",chardata"`
-	Generator string   `xml:"generator,attr"`
-	Generated string   `xml:"generated,attr"`
-	Rpa       string   `xml:"rpa,attr"`
-	Suite     struct {
-		Text   string `xml:",chardata"`
-		ID     string `xml:"id,attr"`
-		Name   string `xml:"name,attr"`
-		Source string `xml:"source,attr"`
-		Suite  struct {
-			Text   string `xml:",chardata"`
-			ID     string `xml:"id,attr"`
-			Name   string `xml:"name,attr"`
-			Source string `xml:"source,attr"`
-			Test   []struct {
-				Text string `xml:",chardata"`
-				ID   string `xml:"id,attr"`
-				Name string `xml:"name,attr"`
-				Kw   []struct {
-					Text      string `xml:",chardata"`
-					Name      string `xml:"name,attr"`
-					Library   string `xml:"library,attr"`
-					Type      string `xml:"type,attr"`
-					Doc       string `xml:"doc"`
-					Arguments struct {
-						Text string   `xml:",chardata"`
-						Arg  []string `xml:"arg"`
-					} `xml:"arguments"`
-					Msg struct {
-						Text      string `xml:",chardata"`
-						Timestamp string `xml:"timestamp,attr"`
-						Level     string `xml:"level,attr"`
-					} `xml:"msg"`
-					Status struct {
-						Text      string `xml:",chardata"`
-						Status    string `xml:"status,attr"`
-						Starttime string `xml:"starttime,attr"`
-						Endtime   string `xml:"endtime,attr"`
-					} `xml:"status"`
-				} `xml:"kw"`
-				Status struct {
-					Text      string `xml:",chardata"`
-					Status    string `xml:"status,attr"`
-					Starttime string `xml:"starttime,attr"`
-					Endtime   string `xml:"endtime,attr"`
-					Critical  string `xml:"critical,attr"`
-				} `xml:"status"`
-			} `xml:"test"`
-			Status struct {
-				Text      string `xml:",chardata"`
-				Status    string `xml:"status,attr"`
-				Starttime string `xml:"starttime,attr"`
-				Endtime   string `xml:"endtime,attr"`
-			} `xml:"status"`
-		} `xml:"suite"`
-		Status struct {
-			Text      string `xml:",chardata"`
-			Status    string `xml:"status,attr"`
-			Starttime string `xml:"starttime,attr"`
-			Endtime   string `xml:"endtime,attr"`
-		} `xml:"status"`
-	} `xml:"suite"`
-	Statistics struct {
-		Text  string `xml:",chardata"`
-		Total struct {
-			Text string `xml:",chardata"`
-			Stat []struct {
-				Text string `xml:",chardata"`
-				Pass string `xml:"pass,attr"`
-				Fail string `xml:"fail,attr"`
-			} `xml:"stat"`
-		} `xml:"total"`
-		Tag   string `xml:"tag"`
-		Suite struct {
-			Text string `xml:",chardata"`
-			Stat []struct {
-				Text string `xml:",chardata"`
-				Pass string `xml:"pass,attr"`
-				Fail string `xml:"fail,attr"`
-				ID   string `xml:"id,attr"`
-				Name string `xml:"name,attr"`
-			} `xml:"stat"`
-		} `xml:"suite"`
-	} `xml:"statistics"`
-	Errors string `xml:"errors"`
-}
-
-type FailedTest struct {
-	Name    string `json:"name"`
-	Message string `json:"message"`
-	Suite   string `json:"suite"`
-}
-
 const (
 	tokenMissingMessage      = "Token missing. Please define GH_ACCESS_TOKEN environment variable."
 	ownerMissingMessage      = "Owner missing. Please define REPO_OWNER environment variable."
-	shaMissingMessage        = "Commit SHA missing. Please define COMMIT_SHA environment variable."
+	shaMissingMessage        = "Either SHA or PR ID needs to be defined. Please define COMMIT_SHA or PR_ID environment variable."
 	repositoryMissingMessage = "Repository missing. Please define REPOSITORY environment variable."
 	reportPathMissingMessage = "Report path missing. Please define REPORT_PATH environment variable."
 )
 
 var (
-	token      = flag.String("access_token", os.Getenv("GH_ACCESS_TOKEN"), "GitHub Access Token")
-	owner      = flag.String("repo_owner", os.Getenv("REPO_OWNER"), "Repository owner")
-	sha        = flag.String("sha", os.Getenv("COMMIT_SHA"), "Commit`s SHA")
-	repository = flag.String("repository", os.Getenv("REPOSITORY"), "Repository")
-	reportPath = flag.String("report_path", os.Getenv("REPORT_PATH"), "Location of output.xml")
+	token         = flag.String("access_token", os.Getenv("GH_ACCESS_TOKEN"), "GitHub Access Token")
+	owner         = flag.String("repo_owner", os.Getenv("REPO_OWNER"), "Repository owner")
+	sha           = flag.String("sha", os.Getenv("COMMIT_SHA"), "Commit`s SHA")
+	repository    = flag.String("repository", os.Getenv("REPOSITORY"), "Repository")
+	reportPath    = flag.String("report_path", os.Getenv("REPORT_PATH"), "Location of output.xml")
+	pullRequestID = flag.String("pull_request_id", os.Getenv("PR_ID"), "ID of pull")
 )
 
 func readOutput() (*os.File, error) {
@@ -160,7 +67,7 @@ func main() {
 		log.Fatal(ownerMissingMessage)
 	}
 
-	if *sha == "" {
+	if *sha == "" && *pullRequestID == "" {
 		log.Fatal(shaMissingMessage)
 	}
 
@@ -175,52 +82,76 @@ func main() {
 	// Read output.xml file to memory
 	file, err := readOutput()
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 	defer file.Close()
 
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 
-	var robot Robot
+	var output Output
 
-	var failures []FailedTest
+	xml.Unmarshal(byteValue, &output)
 
-	xml.Unmarshal(byteValue, &robot)
+	var passedTests []Test
 
-	//for k := 0; k < len(robot.Suite.Suite.Test); k++ {
+	var failedTests []Test
 
-	//}
+	for i := 0; i < len(output.Suite.Suite.Test); i++ {
+		if output.Suite.Suite.Test[i].Status.Status == "FAIL" {
+			suite := getSuiteName(i, output)
+			name := output.Suite.Suite.Test[i].Name
+			status := strings.ReplaceAll(output.Suite.Suite.Test[i].Status.Text, "\n", " ")
+			testExecutionStartTime := output.Suite.Suite.Test[i].Status.Starttime
+			testExecutionEndTime := output.Suite.Suite.Test[i].Status.Endtime
 
-	var suite string
-
-	for i := 0; i < len(robot.Suite.Suite.Test); i++ {
-		if robot.Suite.Suite.Test[i].Status.Status == "FAIL" {
-			for k := 0; k < len(robot.Statistics.Suite.Stat); k++ {
-				splittedID := strings.SplitN(robot.Suite.Suite.Test[i].ID, "-", 3)
-				suiteID := splittedID[0] + "-" + splittedID[1]
-				testSuiteID := robot.Statistics.Suite.Stat[k].ID
-				if testSuiteID == suiteID {
-					suite = robot.Statistics.Suite.Stat[k].Name
-				}
-				//fmt.Println(robot.Statistics.Suite.Stat[k].Name)
+			executionTime, err := getExecutionTime(testExecutionStartTime, testExecutionEndTime)
+			if err != nil {
+				log.Fatal(err)
 			}
-			name := robot.Suite.Suite.Test[i].Name
-			status := strings.ReplaceAll(robot.Suite.Suite.Test[i].Status.Text, "\n", " ")
+
 			input := []byte(fmt.Sprintf(`[{
 				"name": "%v",
 				"message": "%v",
+				"executionTime": "%v",
 				"suite": "%v"
-			}]`, name, status, suite))
-			var tmpFailure []FailedTest
-			err := json.Unmarshal(input, &tmpFailure)
+			}]`, name, status, executionTime, suite))
+			var tmpFailure []Test
+			err = json.Unmarshal(input, &tmpFailure)
 			if err != nil {
-				fmt.Println(err)
+				log.Fatal(err)
 			}
 
-			failures = append(failures, tmpFailure...)
+			failedTests = append(failedTests, tmpFailure...)
+		}
+
+		if output.Suite.Suite.Test[i].Status.Status == "PASS" {
+			suite := getSuiteName(i, output)
+			name := output.Suite.Suite.Test[i].Name
+			status := strings.ReplaceAll(output.Suite.Suite.Test[i].Status.Text, "\n", " ")
+			testExecutionStartTime := output.Suite.Suite.Test[i].Status.Starttime
+			testExecutionEndTime := output.Suite.Suite.Test[i].Status.Endtime
+
+			executionTime, err := getExecutionTime(testExecutionStartTime, testExecutionEndTime)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			input := []byte(fmt.Sprintf(`[{
+				"name": "%v",
+				"message": "%v",
+				"executionTime": "%v",
+				"suite": "%v"
+			}]`, name, status, executionTime, suite))
+			var tmpPass []Test
+			err = json.Unmarshal(input, &tmpPass)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			passedTests = append(passedTests, tmpPass...)
 		}
 	}
 
@@ -229,34 +160,79 @@ func main() {
 	// Use the oauth client to authenticate to Github API
 	client := github.NewClient(tc)
 
-	passed := robot.Statistics.Total.Stat[0].Pass
-	failed := robot.Statistics.Total.Stat[0].Fail
-	total := len(robot.Suite.Suite.Test)
+	passedInt, err := strconv.Atoi(output.Statistics.Total.Stat[0].Pass)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	passPercentage := fmt.Sprintf("%.2f", float64(passedInt) / float64(len(output.Suite.Suite.Test)) * 100)
 
 	vars := make(map[string]interface{})
-	vars["Passed"] = &passed
-	vars["Failed"] = &failed
-	vars["Total"] = &total
-	vars["FailedTests"] = &failures
+	vars["Passed"] = output.Statistics.Total.Stat[0].Pass
+	vars["Failed"] = output.Statistics.Total.Stat[0].Fail
+	vars["Skipped"] = output.Statistics.Total.Stat[0].Skip
+	vars["Total"] = len(output.Suite.Suite.Test)
+	vars["PassPercentage"] = &passPercentage
+	vars["PassedTests"] = &passedTests
+	vars["FailedTests"] = &failedTests
 
 	var tp bytes.Buffer
 
-	templatelocation := "/template.txt"
+	templatelocation := "./assets/template.txt"
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	tpl, err := template.ParseFiles(templatelocation)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	tpl.Execute(&tp, vars)
 
 	result := tp.String()
 
-	commitComment := &github.RepositoryComment{Body: &result}
+	// GitHub's REST API v3 considers every pull request an issue
+	if *pullRequestID != "" {
+		pullRequestComment := &github.IssueComment{Body: &result}
+		updated := false
+		convPullRequestID, err := strconv.Atoi(*pullRequestID)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	_, _, err = client.Repositories.CreateComment(ctx, *owner, *repository, *sha, commitComment)
-	if err != nil {
-		log.Fatal(err)
+		// Get all comments in PR
+		comments, _, err := client.Issues.ListComments(ctx, *owner, *repository, convPullRequestID, &github.IssueListCommentsOptions{})
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Loop through comments and check if report comment already exists
+		for _, val := range comments {
+			if resultCommentExists(*val.Body) {
+				_, _, err = client.Issues.EditComment(ctx, *owner, *repository, *val.ID, pullRequestComment)
+				if err != nil {
+					log.Fatal(err)
+				}
+				updated = true
+			}
+		}
+
+		if !updated {
+			_, _, err = client.Issues.CreateComment(ctx, *owner, *repository, convPullRequestID, pullRequestComment)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
+	}
+
+	if *pullRequestID == "" {
+		commitComment := &github.RepositoryComment{Body: &result}
+		_, _, err = client.Repositories.CreateComment(ctx, *owner, *repository, *sha, commitComment)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 }

@@ -165,7 +165,7 @@ func main() {
 		log.Panic(err)
 	}
 
-	passPercentage := float64(passedInt) / float64(len(output.Suite.Suite.Test)) * 100
+	passPercentage := fmt.Sprintf("%.2f", float64(passedInt) / float64(len(output.Suite.Suite.Test)) * 100)
 
 	vars := make(map[string]interface{})
 	vars["Passed"] = output.Statistics.Total.Stat[0].Pass

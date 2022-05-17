@@ -35,6 +35,7 @@ var (
 	repository    = flag.String("repository", os.Getenv("REPOSITORY"), "Repository")
 	reportPath    = flag.String("report_path", os.Getenv("REPORT_PATH"), "Location of output.xml")
 	pullRequestID = flag.String("pull_request_id", os.Getenv("PR_ID"), "ID of pull")
+	summary       = flag.String("summary", os.Getenv("SUMMARY"), "If true show report in job summary")
 )
 
 func readOutput() (*os.File, error) {
@@ -165,7 +166,7 @@ func main() {
 		log.Panic(err)
 	}
 
-	passPercentage := fmt.Sprintf("%.2f", float64(passedInt) / float64(len(output.Suite.Suite.Test)) * 100)
+	passPercentage := fmt.Sprintf("%.2f", float64(passedInt)/float64(len(output.Suite.Suite.Test))*100)
 
 	vars := make(map[string]interface{})
 	vars["Passed"] = output.Statistics.Total.Stat[0].Pass
@@ -235,4 +236,16 @@ func main() {
 		}
 	}
 
+	if *summary == "true" {
+		github_env := os.Getenv("GITHUB_STEP_SUMMARY")
+
+		file, err = os.OpenFile(github_env, os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Println(err)
+		}
+		defer file.Close()
+		if _, err := file.WriteString(result); err != nil {
+			log.Println(err)
+		}
+	}
 }

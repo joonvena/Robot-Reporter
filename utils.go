@@ -1,8 +1,8 @@
 package main
 
 import (
+	"fmt"
 	"regexp"
-	"strings"
 	"time"
 )
 
@@ -29,14 +29,12 @@ func resultCommentExists(comment string) bool {
 	return match
 }
 
-func getSuiteName(i int, output Output) string {
-	for k := 0; k < len(output.Statistics.Suite.Stat); k++ {
-		splittedID := strings.SplitN(output.Suite.Suite.Test[i].ID, "-", 3)
-		suiteID := splittedID[0] + "-" + splittedID[1]
-		testSuiteID := output.Statistics.Suite.Stat[k].ID
-		if testSuiteID == suiteID {
-			return output.Statistics.Suite.Stat[k].Name
-		}
+func passPercentage(passed int, failed int) string {
+	if passed != 0 && failed == 0 {
+		return "100"
 	}
-	return ""
+	if passed != 0 && failed != 0 {
+		return fmt.Sprintf("%.2f", (float64(passed) / float64(failed)))
+	}
+	return "0"
 }

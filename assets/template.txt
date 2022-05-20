@@ -3,16 +3,16 @@
 | --- | --- | --- | :---: | :---: |
 | {{.Passed}} | {{.Failed}} | {{.Skipped}} | {{.Total}} | {{.PassPercentage}}
 
-{{ if eq (len .PassedTests) 0 }}
+{{ if or (eq (len .PassedTests) 0) (eq .ShowPassedTests "false") }}
 
 {{else -}}
 ### Passed Tests
 | Name | :stopwatch: Duration | Suite |
 | --- | :---: | :---: |
-{{end -}}
 {{range .PassedTests -}}
 | {{.Name}} | {{.ExecutionTime}} s | `{{.Suite}}` |
 {{end}}
+{{end -}}
 
 {{ if eq (len .FailedTests) 0 }}
 

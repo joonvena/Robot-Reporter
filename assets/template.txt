@@ -20,8 +20,8 @@
 ### Failed Tests
 | Name | Message | :stopwatch: Duration | Suite |
 | --- | --- | :---: | :---: |
-{{end -}}
 {{range .FailedTests -}}
 | {{.Name}} | {{.Message}} | {{.ExecutionTime}} s | `{{.Suite}}` |
 {{else}}
 {{end}}
+{{end -}}

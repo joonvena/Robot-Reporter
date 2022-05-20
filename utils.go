@@ -34,7 +34,7 @@ func passPercentage(passed int, failed int) string {
 		return "100"
 	}
 	if passed != 0 && failed != 0 {
-		return fmt.Sprintf("%.2f", (float64(passed) / float64(failed)))
+		return fmt.Sprintf("%.2f", (float64(passed) / (float64(passed) + float64(failed)) * 100))
 	}
 	return "0"
 }

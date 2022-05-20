@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/antchfx/xmlquery"
 	"github.com/google/go-github/github"
@@ -21,6 +22,7 @@ type Test struct {
 	Status        string
 	Suite         string
 	ExecutionTime float64
+	Message       string
 }
 
 type Statistics struct {
@@ -119,6 +121,7 @@ func main() {
 		suite := test.Parent.SelectAttr("name")
 		startTime := test.SelectElement("status").SelectAttr("starttime")
 		endTime := test.SelectElement("status").SelectAttr("endtime")
+		message := strings.ReplaceAll(test.SelectElement("status").InnerText(), "\n", " ")
 
 		executionTime, err := getExecutionTime(startTime, endTime)
 		if err != nil {
@@ -131,6 +134,7 @@ func main() {
 				Status:        status,
 				Suite:         suite,
 				ExecutionTime: executionTime,
+				Message:       message,
 			})
 		}
 
@@ -140,6 +144,7 @@ func main() {
 				Status:        status,
 				Suite:         suite,
 				ExecutionTime: executionTime,
+				Message:       message,
 			})
 		}
 	}

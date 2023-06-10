@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -160,6 +161,11 @@ func main() {
 	ctx, tc := authenticate()
 	// Use the oauth client to authenticate to Github API
 	client := github.NewClient(tc)
+	url, err := url.Parse(os.Getenv("GITHUB_API_URL") + "/")
+	if err != nil {
+		log.Fatal(err)
+	}
+	client.BaseURL = url
 
 	passedInt, err := strconv.Atoi(output.Statistics.Total.Stat[0].Pass)
 	if err != nil {

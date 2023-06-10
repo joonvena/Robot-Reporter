@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -193,6 +194,11 @@ func main() {
 	ctx, tc := authenticate()
 	// Use the oauth client to authenticate to Github API
 	client := github.NewClient(tc)
+	url, err := url.Parse(os.Getenv("GITHUB_API_URL") + "/")
+	if err != nil {
+		log.Fatal(err)
+	}
+	client.BaseURL = url
 
 	if *onlySummary != "true" {
 		// GitHub's REST API v3 considers every pull request an issue

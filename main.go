@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/antchfx/xmlquery"
 	"github.com/google/go-github/github"
@@ -115,6 +116,7 @@ func main() {
 
 	var failedTests []Test
 	var passedTests []Test
+	var totalDuration float64
 
 	for _, test := range tests {
 		name := test.SelectAttr("name")
@@ -128,6 +130,7 @@ func main() {
 		if err != nil {
 			log.Println(err)
 		}
+		totalDuration += executionTime
 
 		if status == "PASS" {
 			passedTests = append(passedTests, Test{
@@ -176,6 +179,7 @@ func main() {
 	vars["PassPercentage"] = passPercentage(passInt, failInt)
 	vars["PassedTests"] = passedTests
 	vars["FailedTests"] = failedTests
+	vars["TotalDuration"] = time.Duration(totalDuration * float64(time.Second)).String()
 	vars["ShowPassedTests"] = *showPassedTests
 
 	templatelocation := "./assets/template.txt"

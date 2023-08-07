@@ -1,7 +1,7 @@
 ### Robot Results
-| :white_check_mark: Passed | :x: Failed | :next_track_button: Skipped | Total | Pass % |
-| --- | --- | --- | :---: | :---: |
-| {{.Passed}} | {{.Failed}} | {{.Skipped}} | {{.Total}} | {{.PassPercentage}}
+| :white_check_mark: Passed | :x: Failed | :next_track_button: Skipped | Total | Pass % | :stopwatch: Duration |
+| --- | --- | --- | :---: | :---: | :---: |
+| {{.Passed}} | {{.Failed}} | {{.Skipped}} | {{.Total}} | {{.PassPercentage}} | {{.TotalDuration}} |
 
 {{ if or (eq (len .PassedTests) 0) (eq .ShowPassedTests "false") }}
 

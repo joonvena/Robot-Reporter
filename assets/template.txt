@@ -10,7 +10,7 @@
 | Name | :stopwatch: Duration | Suite |
 | --- | :---: | :---: |
 {{range .PassedTests -}}
-| {{.Name}} | {{.ExecutionTime}} s | `{{.Suite}}` |
+| {{.Name}} | {{printf "%.3f" .ExecutionTime}} s | `{{.Suite}}` |
 {{end}}
 {{end -}}
 
@@ -21,7 +21,7 @@
 | Name | Message | :stopwatch: Duration | Suite |
 | --- | --- | :---: | :---: |
 {{range .FailedTests -}}
-| {{.Name}} | {{.Message}} | {{.ExecutionTime}} s | `{{.Suite}}` |
+| {{.Name}} | {{.Message}} | {{printf "%.3f" .ExecutionTime}} s | `{{.Suite}}` |
 {{else}}
 {{end}}
 {{end -}}

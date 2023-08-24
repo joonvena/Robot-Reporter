@@ -1,7 +1,7 @@
 ### Robot Results
-| :white_check_mark: Passed | :x: Failed | :next_track_button: Skipped | Total | Pass % |
-| --- | --- | --- | :---: | :---: |
-| {{.Passed}} | {{.Failed}} | {{.Skipped}} | {{.Total}} | {{.PassPercentage}}
+| :white_check_mark: Passed | :x: Failed | :next_track_button: Skipped | Total | Pass % | :stopwatch: Duration |
+| --- | --- | --- | :---: | :---: | :---: |
+| {{.Passed}} | {{.Failed}} | {{.Skipped}} | {{.Total}} | {{.PassPercentage}} | {{.TotalDuration}} |
 
 {{ if or (eq (len .PassedTests) 0) (eq .ShowPassedTests "false") }}
 
@@ -10,7 +10,7 @@
 | Name | :stopwatch: Duration | Suite |
 | --- | :---: | :---: |
 {{range .PassedTests -}}
-| {{.Name}} | {{.ExecutionTime}} s | `{{.Suite}}` |
+| {{.Name}} | {{printf "%.3f" .ExecutionTime}} s | `{{.Suite}}` |
 {{end}}
 {{end -}}
 
@@ -21,7 +21,7 @@
 | Name | Message | :stopwatch: Duration | Suite |
 | --- | --- | :---: | :---: |
 {{range .FailedTests -}}
-| {{.Name}} | {{.Message}} | {{.ExecutionTime}} s | `{{.Suite}}` |
+| {{.Name}} | {{.Message}} | {{printf "%.3f" .ExecutionTime}} s | `{{.Suite}}` |
 {{else}}
 {{end}}
 {{end -}}

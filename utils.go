@@ -10,7 +10,7 @@ func getExecutionTime(elapsed string) (float64, error) {
 	// Convert string to float64
 	f, err := strconv.ParseFloat(elapsed, 64)
 	if err != nil {
-		return 0, err
+		return 0.0, err
 	}
 	return f, nil
 }

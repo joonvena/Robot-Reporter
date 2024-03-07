@@ -3,25 +3,16 @@ package main
 import (
 	"fmt"
 	"regexp"
-	"time"
+	"strconv"
 )
 
-const (
-	timeFormatLayout = "20060102 15:04:05,000"
-)
-
-func getExecutionTime(start string, end string) (float64, error) {
-	startTime, err := time.Parse(timeFormatLayout, start)
+func getExecutionTime(elapsed string) (float64, error) {
+	// Convert string to float64
+	f, err := strconv.ParseFloat(elapsed, 64)
 	if err != nil {
 		return 0.0, err
 	}
-	endTime, err := time.Parse(timeFormatLayout, end)
-	if err != nil {
-		return 0.0, err
-	}
-
-	diff := endTime.Sub(startTime)
-	return diff.Seconds(), nil
+	return f, nil
 }
 
 func resultCommentExists(comment string) bool {

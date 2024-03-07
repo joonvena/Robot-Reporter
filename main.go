@@ -122,11 +122,10 @@ func main() {
 		name := test.SelectAttr("name")
 		status := test.SelectElement("status").SelectAttr("status")
 		suite := test.Parent.SelectAttr("name")
-		startTime := test.SelectElement("status").SelectAttr("starttime")
-		endTime := test.SelectElement("status").SelectAttr("endtime")
+		elapsed := test.SelectElement("status").SelectAttr("elapsed")
 		message := strings.ReplaceAll(test.SelectElement("status").InnerText(), "\n", " ")
 
-		executionTime, err := getExecutionTime(startTime, endTime)
+		executionTime, err := getExecutionTime(elapsed)
 		if err != nil {
 			log.Println(err)
 		}

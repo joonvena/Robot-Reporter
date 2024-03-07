@@ -113,6 +113,10 @@ func main() {
 	}
 
 	tests := xmlquery.Find(output, "//test")
+	// This is used to determine the Robot Framework version used
+	generator := xmlquery.FindOne(output, "//robot")
+	version := strings.Split(generator.SelectAttr("generator"), " ")[1]
+	majorVersion := getRobotVersion(version)
 
 	var failedTests []Test
 	var passedTests []Test
@@ -122,13 +126,23 @@ func main() {
 		name := test.SelectAttr("name")
 		status := test.SelectElement("status").SelectAttr("status")
 		suite := test.Parent.SelectAttr("name")
-		startTime := test.SelectElement("status").SelectAttr("starttime")
-		endTime := test.SelectElement("status").SelectAttr("endtime")
 		message := strings.ReplaceAll(test.SelectElement("status").InnerText(), "\n", " ")
 
-		executionTime, err := getExecutionTime(startTime, endTime)
-		if err != nil {
-			log.Println(err)
+		var executionTime float64
+
+		if majorVersion >= 7 {
+			elapsed := test.SelectElement("status").SelectAttr("elapsed")
+			executionTime, err = getExecutionTime(elapsed, "")
+			if err != nil {
+				log.Println(err)
+			}
+		} else {
+			startTime := test.SelectElement("status").SelectAttr("starttime")
+			endTime := test.SelectElement("status").SelectAttr("endtime")
+			executionTime, err = getExecutionTime(startTime, endTime)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 		totalDuration += executionTime
 

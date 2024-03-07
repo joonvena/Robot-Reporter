@@ -3,7 +3,7 @@ module github.com/joonvena/robot-reporter
 go 1.14
 
 require (
-	github.com/antchfx/xmlquery v1.3.10 // indirect
+	github.com/antchfx/xmlquery v1.3.10
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-querystring v1.0.0 // indirect

@@ -72,6 +72,15 @@ func authenticate() (context.Context, *http.Client) {
 	return ctx, tc
 }
 
+func getExecutionTime(node *xmlquery.Node) (float64, error) {
+	// "elapsed" attribute was only introduced in RobotFramework >= 7.0
+	if elapsed := node.SelectAttr("elapsed"); elapsed != "" {
+		return getExecutionTimeV2(elapsed)
+	}
+	// In RobotFramework < 7.0 calculate execution time from starttime and endtime attributes
+	return getExecutionTimeV1(node.SelectAttr("starttime"), node.SelectAttr("endtime"))
+}
+
 func main() {
 
 	if *onlySummary == "true" && *summary != "true" {
@@ -122,10 +131,9 @@ func main() {
 		name := test.SelectAttr("name")
 		status := test.SelectElement("status").SelectAttr("status")
 		suite := test.Parent.SelectAttr("name")
-		elapsed := test.SelectElement("status").SelectAttr("elapsed")
 		message := strings.ReplaceAll(test.SelectElement("status").InnerText(), "\n", " ")
 
-		executionTime, err := getExecutionTime(elapsed)
+		executionTime, err := getExecutionTime(test.SelectElement("status"))
 		if err != nil {
 			log.Println(err)
 		}

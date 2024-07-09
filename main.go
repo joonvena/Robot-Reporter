@@ -42,15 +42,16 @@ const (
 )
 
 var (
-	token           = flag.String("access_token", os.Getenv("GH_ACCESS_TOKEN"), "GitHub Access Token")
-	owner           = flag.String("repo_owner", os.Getenv("REPO_OWNER"), "Repository owner")
-	sha             = flag.String("sha", os.Getenv("COMMIT_SHA"), "Commit`s SHA")
-	repository      = flag.String("repository", os.Getenv("REPOSITORY"), "Repository")
-	reportPath      = flag.String("report_path", os.Getenv("REPORT_PATH"), "Location of output.xml")
-	pullRequestID   = flag.String("pull_request_id", os.Getenv("PR_ID"), "ID of pull")
-	summary         = flag.String("summary", os.Getenv("SUMMARY"), "If true show report in job summary")
-	onlySummary     = flag.String("only_summary", os.Getenv("ONLY_SUMMARY"), "If true only add report to job summary")
-	showPassedTests = flag.String("show_passed_tests", os.Getenv("SHOW_PASSED_TESTS"), "If true display also passed tests")
+	token            = flag.String("access_token", os.Getenv("GH_ACCESS_TOKEN"), "GitHub Access Token")
+	owner            = flag.String("repo_owner", os.Getenv("REPO_OWNER"), "Repository owner")
+	sha              = flag.String("sha", os.Getenv("COMMIT_SHA"), "Commit`s SHA")
+	repository       = flag.String("repository", os.Getenv("REPOSITORY"), "Repository")
+	reportPath       = flag.String("report_path", os.Getenv("REPORT_PATH"), "Location of output.xml")
+	pullRequestID    = flag.String("pull_request_id", os.Getenv("PR_ID"), "ID of pull")
+	summary          = flag.String("summary", os.Getenv("SUMMARY"), "If true show report in job summary")
+	onlySummary      = flag.String("only_summary", os.Getenv("ONLY_SUMMARY"), "If true only add report to job summary")
+	showPassedTests  = flag.String("show_passed_tests", os.Getenv("SHOW_PASSED_TESTS"), "If true display also passed tests")
+	failedTestsOnTop = flag.String("failed_tests_on_top", os.Getenv("FAILED_TESTS_ON_TOP"), "If true failed tests are shown at the top of the report")
 )
 
 func readOutput() (*os.File, error) {
@@ -180,6 +181,7 @@ func main() {
 	vars["FailedTests"] = failedTests
 	vars["TotalDuration"] = time.Duration(totalDuration * float64(time.Second)).String()
 	vars["ShowPassedTests"] = *showPassedTests
+	vars["FailedTestsOnTop"] = *failedTestsOnTop
 
 	templatelocation := "./assets/template.txt"
 	tpl, err := template.ParseFiles(templatelocation)
